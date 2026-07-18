@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#17171c">
+<title>TU NOMBRE — JSON UI & Addons para MCPE</title>
+<!-- ============================================================
+  CÓMO EDITAR ESTE ARCHIVO:
+  1. Buscá "EDITAR" (Ctrl+F) — cada bloque marcado es texto tuyo.
+  2. Reemplazá "TU NOMBRE", links de Discord/YouTube, y los proyectos.
+  3. Para las imágenes de proyectos: reemplazá el <div class="thumb">
+     por <img src="tu-captura.png" alt="..."> dentro de .card-media.
+============================================================ -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Silkscreen:wght@400;700&family=Rubik:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#17171c;            /* fondo general */
+  --panel:#26262e;         /* paneles UI */
+  --panel-2:#1e1e25;       /* paneles hundidos / slots */
+  --line:#3d3d48;          /* bordes de panel */
+  --line-dark:#0c0c10;     /* borde exterior negro */
+  --text:#f2f2f2;
+  --muted:#a8a8b4;
+  --green:#3c8527;         /* botón Minecraft */
+  --green-hi:#57a63c;
+  --green-dark:#1d4d13;
+  --xp:#7fcc19;            /* verde barra de XP */
+  --gold:#ffb600;          /* minecoin */
+  --blue:#4aa4ff;          /* strings JSON */
+  --key:#8fd3ff;           /* keys JSON */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Rubik",sans-serif;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+/* textura sutil de fondo tipo bedrock */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:8px 8px;
+}
+img{image-rendering:pixelated}
+::selection{background:var(--green);color:#fff}
+
+/* ---------- utilidades pixel ---------- */
+.px{ /* borde pixelado: esquinas recortadas con box-shadow */
+  position:relative;
+  background:var(--panel);
+  box-shadow:
+    0 -4px 0 0 var(--line-dark),
+    0 4px 0 0 var(--line-dark),
+    -4px 0 0 0 var(--line-dark),
+    4px 0 0 0 var(--line-dark),
+    inset 0 4px 0 0 var(--line),
+    inset -4px 0 0 0 rgba(0,0,0,.35),
+    inset 0 -4px 0 0 rgba(0,0,0,.35),
+    inset 4px 0 0 0 var(--line);
+}
+.px-sunken{
+  background:var(--panel-2);
+  box-shadow:
+    0 -4px 0 0 var(--line-dark),
+    0 4px 0 0 var(--line-dark),
+    -4px 0 0 0 var(--line-dark),
+    4px 0 0 0 var(--line-dark),
+    inset 0 4px 0 0 rgba(0,0,0,.5),
+    inset 4px 0 0 0 rgba(0,0,0,.5),
+    inset 0 -4px 0 0 var(--line),
+    inset -4px 0 0 0 var(--line);
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+h1,h2{font-family:"Jersey 10",monospace;font-weight:400;letter-spacing:.5px}
+.eyebrow{
+  font-family:"Silkscreen",monospace;font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;color:var(--xp);margin-bottom:10px;display:block;
+}
+
+/* ---------- botón Minecraft ---------- */
+.mc-btn{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:"Silkscreen",monospace;font-size:13px;
+  color:#fff;text-decoration:none;cursor:pointer;
+  background:var(--green);
+  padding:14px 22px;border:none;
+  box-shadow:
+    0 -3px 0 0 var(--line-dark), 0 3px 0 0 var(--line-dark),
+    -3px 0 0 0 var(--line-dark), 3px 0 0 0 var(--line-dark),
+    inset 0 4px 0 0 var(--green-hi),
+    inset 0 -5px 0 0 var(--green-dark);
+  text-shadow:2px 2px 0 rgba(0,0,0,.4);
+  transition:filter .1s;
+}
+.mc-btn:hover{filter:brightness(1.12)}
+.mc-btn:active{transform:translateY(3px);box-shadow:
+  0 -3px 0 0 var(--line-dark), 0 3px 0 0 var(--line-dark),
+  -3px 0 0 0 var(--line-dark), 3px 0 0 0 var(--line-dark),
+  inset 0 -4px 0 0 var(--green-hi), inset 0 5px 0 0 var(--green-dark)}
+.mc-btn.gray{background:#55555f;box-shadow:
+  0 -3px 0 0 var(--line-dark), 0 3px 0 0 var(--line-dark),
+  -3px 0 0 0 var(--line-dark), 3px 0 0 0 var(--line-dark),
+  inset 0 4px 0 0 #6f6f7c, inset 0 -5px 0 0 #33333b}
+.mc-btn:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* ---------- loading ---------- */
+#loader{
+  position:fixed;inset:0;z-index:100;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+  transition:opacity .4s;
+}
+#loader.done{opacity:0;pointer-events:none}
+#loader .logo{font-family:"Jersey 10",monospace;font-size:40px}
+.loadbar{width:min(320px,70vw);height:22px}
+.loadbar .fill{height:100%;width:0%;background:var(--xp);
+  box-shadow:inset 0 4px 0 rgba(255,255,255,.35), inset 0 -4px 0 rgba(0,0,0,.3);
+  transition:width .25s steps(8)}
+
+/* ---------- nav ---------- */
+nav{
+  position:sticky;top:0;z-index:50;background:rgba(23,23,28,.92);
+  backdrop-filter:blur(4px);border-bottom:3px solid var(--line-dark);
+}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.brand{font-family:"Jersey 10",monospace;font-size:26px;color:var(--text);text-decoration:none;display:flex;align-items:center;gap:10px}
+.brand svg{width:26px;height:26px}
+.nav-links{display:flex;gap:4px;list-style:none}
+.nav-links a{
+  font-family:"Silkscreen",monospace;font-size:11px;color:var(--muted);
+  text-decoration:none;padding:10px 12px;transition:color .15s;
+}
+.nav-links a:hover{color:var(--xp)}
+
+/* ---------- hero ---------- */
+#hero{padding:72px 0 88px}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.hero-title{font-size:clamp(44px,7vw,76px);line-height:1.02;text-shadow:4px 4px 0 rgba(0,0,0,.55)}
+.hero-title .accent{color:var(--xp)}
+.hero-sub{color:var(--muted);margin:18px 0 28px;max-width:46ch;font-size:17px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+
+/* hotbar de stats */
+.hotbar{display:flex;gap:10px;margin-top:40px;flex-wrap:wrap}
+.slot{
+  width:96px;padding:12px 8px;text-align:center;
+}
+.slot .num{font-family:"Jersey 10",monospace;font-size:30px;color:var(--gold);line-height:1}
+.slot .lbl{font-family:"Silkscreen",monospace;font-size:9px;color:var(--muted);margin-top:6px;display:block}
+
+/* panel JSON (firma del diseño) */
+.json-panel{padding:0;overflow:hidden}
+.json-head{
+  display:flex;align-items:center;gap:10px;
+  background:var(--panel-2);padding:10px 16px;border-bottom:3px solid var(--line-dark);
+  font-family:"Silkscreen",monospace;font-size:11px;color:var(--muted);
+}
+.json-head .dot{width:10px;height:10px;background:var(--green)}
+.json-body{
+  padding:20px 22px;font-family:"Silkscreen",monospace;font-size:12px;line-height:2;
+  color:var(--muted);min-height:330px;white-space:pre-wrap;word-break:break-word;
+}
+.json-body .k{color:var(--key)}
+.json-body .s{color:var(--blue)}
+.json-body .n{color:var(--gold)}
+.json-body .caret{display:inline-block;width:8px;height:14px;background:var(--xp);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* ---------- secciones ---------- */
+section{padding:80px 0}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:40px}
+.sec-head h2{font-size:clamp(34px,5vw,50px);text-shadow:3px 3px 0 rgba(0,0,0,.5)}
+.sec-head .xp-line{flex:1;height:8px;background:var(--panel-2);position:relative;overflow:hidden}
+.sec-head .xp-line::after{content:"";position:absolute;inset:0;width:35%;background:var(--xp);
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.3)}
+
+/* ---------- sobre mí ---------- */
+.about-grid{display:grid;grid-template-columns:340px 1fr;gap:40px;align-items:start}
+.avatar-card{padding:28px;text-align:center}
+.avatar{width:128px;height:128px;margin:0 auto 18px;display:block}
+.avatar-card .name{font-family:"Jersey 10",monospace;font-size:30px}
+.avatar-card .tag{font-family:"Silkscreen",monospace;font-size:10px;color:var(--muted)}
+.datos{list-style:none;margin-top:20px;text-align:left;font-size:14px}
+.datos li{display:flex;justify-content:space-between;padding:9px 4px;border-bottom:2px solid var(--panel-2)}
+.datos li span:first-child{color:var(--muted);font-family:"Silkscreen",monospace;font-size:10px;align-self:center}
+.about-text p{margin-bottom:16px;color:#d6d6de}
+.about-text strong{color:var(--xp)}
+/* inventario de skills */
+.inv-label{font-family:"Silkscreen",monospace;font-size:11px;color:var(--muted);margin:26px 0 12px;display:block}
+.inventory{display:flex;flex-wrap:wrap;gap:8px}
+.inv-slot{
+  width:58px;height:58px;display:flex;align-items:center;justify-content:center;
+  position:relative;cursor:help;
+}
+.inv-slot svg{width:32px;height:32px}
+.inv-slot:hover{filter:brightness(1.3)}
+.inv-slot::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  background:#100010;border:2px solid #250058;color:#fff;
+  font-family:"Silkscreen",monospace;font-size:9px;padding:6px 10px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .15s;z-index:5;
+}
+.inv-slot:hover::after{opacity:1}
+
+/* ---------- proyectos ---------- */
+.tabs{display:flex;gap:10px;margin-bottom:32px;flex-wrap:wrap}
+.tab{
+  font-family:"Silkscreen",monospace;font-size:11px;color:var(--muted);
+  background:var(--panel-2);border:3px solid var(--line-dark);
+  padding:10px 18px;cursor:pointer;transition:all .15s;
+}
+.tab:hover{color:var(--text)}
+.tab.active{background:var(--green);color:#fff;box-shadow:inset 0 3px 0 var(--green-hi),inset 0 -4px 0 var(--green-dark)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:26px}
+.card{padding:0;overflow:hidden;transition:transform .15s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-4px)}
+.card-media{position:relative;border-bottom:3px solid var(--line-dark)}
+.thumb{height:170px;display:flex;align-items:center;justify-content:center}
+.thumb svg{width:72px;height:72px}
+.badge{
+  position:absolute;top:10px;left:10px;
+  font-family:"Silkscreen",monospace;font-size:9px;padding:5px 9px;
+  background:var(--gold);color:#241a00;border:2px solid var(--line-dark);
+}
+.badge.addon{background:var(--blue);color:#001a33}
+.card-body{padding:20px 22px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+.card-body h3{font-family:"Jersey 10",monospace;font-size:26px;font-weight:400}
+.card-body p{font-size:14px;color:var(--muted);flex:1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:"Silkscreen",monospace;font-size:8px;background:var(--panel-2);
+  border:2px solid var(--line-dark);padding:4px 8px;color:var(--xp)}
+.card-links{display:flex;gap:10px}
+.card-links a{font-family:"Silkscreen",monospace;font-size:10px;color:var(--gold);text-decoration:none}
+.card-links a:hover{text-decoration:underline}
+
+/* ---------- contacto ---------- */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px}
+.contact-btn{
+  display:flex;align-items:center;gap:14px;padding:18px 20px;text-decoration:none;color:var(--text);
+  transition:transform .15s;
+}
+.contact-btn:hover{transform:translateY(-3px)}
+.contact-btn svg{width:28px;height:28px;flex-shrink:0}
+.contact-btn .cb-name{font-family:"Silkscreen",monospace;font-size:11px}
+.contact-btn .cb-user{font-size:12px;color:var(--muted)}
+
+/* ---------- footer ---------- */
+footer{border-top:3px solid var(--line-dark);padding:28px 0;text-align:center;
+  font-family:"Silkscreen",monospace;font-size:10px;color:var(--muted)}
+footer .heart{color:var(--xp)}
+
+/* ---------- logro (toast) ---------- */
+#achv{
+  position:fixed;top:20px;right:-420px;z-index:90;display:flex;gap:14px;align-items:center;
+  padding:14px 20px;max-width:340px;transition:right .5s steps(12);
+}
+#achv.show{right:20px}
+#achv svg{width:34px;height:34px;flex-shrink:0}
+#achv .a-title{color:var(--gold);font-family:"Silkscreen",monospace;font-size:10px}
+#achv .a-desc{font-family:"Silkscreen",monospace;font-size:10px;color:var(--text)}
+
+/* ---------- reveal ---------- */
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .5s,transform .5s}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .reveal{opacity:1;transform:none}
+}
+
+/* ---------- responsive ---------- */
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:44px}
+  .about-grid{grid-template-columns:1fr}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Pantalla de carga -->
+<div id="loader" role="status" aria-label="Cargando">
+  <div class="logo">TU NOMBRE<span style="color:var(--xp)">_</span></div>
+  <div class="loadbar px-sunken"><div class="fill" id="loadfill"></div></div>
+  <div style="font-family:'Silkscreen',monospace;font-size:10px;color:var(--muted)" id="loadtip">Compilando ui_defs.json…</div>
+</div>
+
+<!-- Logro -->
+<div id="achv" class="px" aria-live="polite">
+  <svg viewBox="0 0 16 16" fill="none"><rect x="5" y="1" width="6" height="2" fill="#ffb600"/><rect x="3" y="3" width="10" height="6" fill="#ffb600"/><rect x="1" y="3" width="2" height="4" fill="#ffb600"/><rect x="13" y="3" width="2" height="4" fill="#ffb600"/><rect x="6" y="9" width="4" height="2" fill="#c68a00"/><rect x="5" y="11" width="6" height="2" fill="#ffb600"/><rect x="4" y="13" width="8" height="2" fill="#c68a00"/></svg>
+  <div>
+    <div class="a-title">¡Logro desbloqueado!</div>
+    <div class="a-desc">Visitaste el portfolio</div>
+  </div>
+</div>
+
+<nav>
+  <div class="wrap">
+    <a href="#hero" class="brand">
+      <svg viewBox="0 0 16 16"><rect width="16" height="16" fill="#3c8527"/><rect x="2" y="2" width="12" height="12" fill="#57a63c"/><rect x="4" y="4" width="3" height="3" fill="#17171c"/><rect x="9" y="4" width="3" height="3" fill="#17171c"/><rect x="5" y="9" width="6" height="3" fill="#17171c"/></svg>
+      TU NOMBRE <!-- EDITAR: tu nick -->
+    </a>
+    <ul class="nav-links">
+      <li><a href="#about">Sobre mí</a></li>
+      <li><a href="#projects">Proyectos</a></li>
+      <li><a href="#contact">Contacto</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= HERO ================= -->
+<header id="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">// creador de contenido para Minecraft: Bedrock</span>
+      <h1 class="hero-title">JSON UI &<br><span class="accent">Addons</span> para MCPE</h1>
+      <!-- EDITAR: tu descripción -->
+      <p class="hero-sub">Diseño interfaces personalizadas y addons para Minecraft Bedrock: HUDs, menús de servidor, sistemas de progresión y mecánicas nuevas. Cada pixel cuenta.</p>
+      <div class="hero-cta">
+        <a href="#projects" class="mc-btn">▶ Ver proyectos</a>
+        <a href="#contact" class="mc-btn gray">✉ Contacto</a>
+      </div>
+      <!-- EDITAR: tus stats -->
+      <div class="hotbar">
+        <div class="slot px-sunken"><div class="num">3+</div><span class="lbl">años creando</span></div>
+        <div class="slot px-sunken"><div class="num">20+</div><span class="lbl">UIs hechas</span></div>
+        <div class="slot px-sunken"><div class="num">10+</div><span class="lbl">addons</span></div>
+        <div class="slot px-sunken"><div class="num">100%</div><span class="lbl">autodidacta</span></div>
+      </div>
+    </div>
+
+    <!-- Firma del diseño: el portfolio descrito como JSON UI -->
+    <div class="json-panel px reveal">
+      <div class="json-head"><span class="dot"></span> ui/portfolio.json</div>
+      <div class="json-body" id="jsoncode" aria-hidden="true"></div>
+    </div>
+  </div>
+</header>
+
+<!-- ================= SOBRE MÍ ================= -->
+<section id="about">
+  <div class="wrap">
+    <div class="sec-head reveal"><h2>Sobre mí</h2><div class="xp-line"></div></div>
+    <div class="about-grid">
+      <div class="avatar-card px reveal">
+        <!-- EDITAR: reemplazá el SVG por <img class="avatar" src="tu-skin.png"> -->
+        <svg class="avatar" viewBox="0 0 16 16"><rect width="16" height="16" fill="#7a5a3a"/><rect x="0" y="0" width="16" height="5" fill="#4a3222"/><rect x="2" y="6" width="3" height="3" fill="#fff"/><rect x="11" y="6" width="3" height="3" fill="#fff"/><rect x="3" y="7" width="2" height="2" fill="#3a6ea5"/><rect x="11" y="7" width="2" height="2" fill="#3a6ea5"/><rect x="6" y="10" width="4" height="2" fill="#5a3a22"/><rect x="5" y="12" width="6" height="2" fill="#8a6a4a"/></svg>
+        <div class="name">TU NOMBRE</div>
+        <div class="tag">&lt;aka TuNick&gt;</div>
+        <ul class="datos">
+          <!-- EDITAR: tus datos -->
+          <li><span>DE</span><span>Argentina 🇦🇷</span></li>
+          <li><span>DESDE</span><span>2023</span></li>
+          <li><span>CLASE</span><span>UI Designer & Addon Dev</span></li>
+          <li><span>FOCO</span><span>JSON UI & Behavior Packs</span></li>
+        </ul>
+      </div>
+      <div class="about-text reveal">
+        <!-- EDITAR: tu historia -->
+        <p>¡Hola! Soy <strong>TU NOMBRE</strong>, creador autodidacta de contenido para Minecraft: Bedrock Edition. Empecé modificando la interfaz vanilla por curiosidad y terminé rediseñando <strong>HUDs completos, menús de servidor y sistemas de progresión</strong> con JSON UI.</p>
+        <p>También desarrollo <strong>addons</strong> con behavior y resource packs: mobs custom, ítems nuevos, mecánicas de juego y scripting con la <strong>Script API</strong>. Me obsesiona que todo se sienta nativo, como si viniera con el juego.</p>
+        <p>Publico mis trabajos en YouTube y acepto encargos personalizados para servidores y mapas.</p>
+        <span class="inv-label">▤ INVENTARIO DE HABILIDADES — pasá el mouse</span>
+        <div class="inventory">
+          <div class="inv-slot px-sunken" data-tip="JSON UI"><svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" fill="#26262e" stroke="#7fcc19" stroke-width="1.5"/><rect x="3" y="4" width="10" height="2" fill="#7fcc19"/><rect x="3" y="8" width="6" height="1.5" fill="#a8a8b4"/><rect x="3" y="11" width="8" height="1.5" fill="#a8a8b4"/></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Resource Packs"><svg viewBox="0 0 16 16"><rect x="2" y="5" width="12" height="9" fill="#b8860b"/><rect x="2" y="5" width="12" height="3" fill="#daa520"/><rect x="6" y="4" width="4" height="3" fill="#8b6508"/><rect x="7" y="7" width="2" height="2" fill="#ffd700"/></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Behavior Packs"><svg viewBox="0 0 16 16"><rect x="3" y="2" width="10" height="12" fill="#8b4513"/><rect x="4" y="3" width="8" height="10" fill="#deb887"/><rect x="5" y="5" width="6" height="1.5" fill="#8b4513"/><rect x="5" y="8" width="6" height="1.5" fill="#8b4513"/></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Script API (JS)"><svg viewBox="0 0 16 16"><rect x="1" y="1" width="14" height="14" fill="#f0db4f"/><text x="8" y="12" font-size="9" font-family="monospace" text-anchor="middle" fill="#26262e" font-weight="bold">JS</text></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Molang"><svg viewBox="0 0 16 16"><rect width="16" height="16" fill="#26262e"/><text x="8" y="11" font-size="7" font-family="monospace" text-anchor="middle" fill="#7fcc19">q.</text></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Blockbench"><svg viewBox="0 0 16 16"><rect x="3" y="6" width="10" height="8" fill="#4aa4ff"/><path d="M3 6 L8 2 L13 6 Z" fill="#77c0ff"/><rect x="3" y="6" width="5" height="8" fill="#2e7ecc"/></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Pixel Art / Texturas"><svg viewBox="0 0 16 16"><rect x="1" y="1" width="7" height="7" fill="#e74c3c"/><rect x="8" y="1" width="7" height="7" fill="#f1c40f"/><rect x="1" y="8" width="7" height="7" fill="#3498db"/><rect x="8" y="8" width="7" height="7" fill="#2ecc71"/></svg></div>
+          <div class="inv-slot px-sunken" data-tip="Git"><svg viewBox="0 0 16 16"><circle cx="4" cy="4" r="2.5" fill="#f05033"/><circle cx="4" cy="12" r="2.5" fill="#f05033"/><circle cx="12" cy="8" r="2.5" fill="#f05033"/><rect x="3" y="5" width="2" height="6" fill="#f05033"/><path d="M5 5 L11 7 L10 9 L4 7 Z" fill="#f05033"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PROYECTOS ================= -->
+<section id="projects">
+  <div class="wrap">
+    <div class="sec-head reveal"><h2>Proyectos</h2><div class="xp-line"></div></div>
+    <div class="tabs reveal" role="tablist">
+      <button class="tab active" data-filter="all">TODOS</button>
+      <button class="tab" data-filter="ui">JSON UI</button>
+      <button class="tab" data-filter="addon">ADDONS</button>
+    </div>
+    <div class="cards">
+      <!-- EDITAR: duplicá/borrá tarjetas. data-cat = "ui" o "addon" -->
+      <article class="card px reveal" data-cat="ui">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#1d3a52,#0f1e2c)">
+            <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="none" stroke="#7fcc19" stroke-width="1"/><rect x="2" y="4" width="8" height="1.5" fill="#7fcc19"/><rect x="2" y="7" width="12" height="1" fill="#4aa4ff"/><rect x="2" y="9" width="9" height="1" fill="#4aa4ff"/><rect x="10" y="11" width="4" height="1.5" fill="#ffb600"/></svg>
+          </div>
+          <span class="badge">JSON UI</span>
+        </div>
+        <div class="card-body">
+          <h3>HUD Personalizado</h3>
+          <p>Rediseño completo del HUD vanilla: hotbar, vida, hambre y XP con animaciones y un layout más limpio.</p>
+          <div class="chips"><span class="chip">jsonUI</span><span class="chip">HUD</span><span class="chip">animaciones</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a> <a href="#">⬇ descargar</a></div>
+        </div>
+      </article>
+
+      <article class="card px reveal" data-cat="ui">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#3a2a52,#1a1230)">
+            <svg viewBox="0 0 16 16"><circle cx="8" cy="3" r="2" fill="#ffb600"/><rect x="7" y="5" width="2" height="3" fill="#7fcc19"/><circle cx="4" cy="10" r="2" fill="#7fcc19"/><circle cx="12" cy="10" r="2" fill="#7fcc19"/><rect x="5" y="9" width="6" height="1.5" fill="#7fcc19"/><circle cx="4" cy="14" r="1.5" fill="#4aa4ff"/><circle cx="12" cy="14" r="1.5" fill="#55555f"/></svg>
+          </div>
+          <span class="badge">JSON UI</span>
+        </div>
+        <div class="card-body">
+          <h3>Skill Tree UI</h3>
+          <p>Árbol de habilidades interactivo con nodos desbloqueables, tooltips y progresión guardada por jugador.</p>
+          <div class="chips"><span class="chip">jsonUI</span><span class="chip">progresión</span><span class="chip">server forms</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a></div>
+        </div>
+      </article>
+
+      <article class="card px reveal" data-cat="ui">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#52341d,#2c1a0f)">
+            <svg viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="3" fill="#ffb600"/><rect x="1" y="6" width="14" height="8" fill="#26262e" stroke="#ffb600" stroke-width=".8"/><rect x="3" y="8" width="3" height="3" fill="#7fcc19"/><rect x="7" y="8" width="3" height="3" fill="#4aa4ff"/><rect x="11" y="8" width="3" height="3" fill="#e74c3c"/></svg>
+          </div>
+          <span class="badge">JSON UI</span>
+        </div>
+        <div class="card-body">
+          <h3>Battle Pass UI</h3>
+          <p>Sistema de pase de temporada con misiones, tiers gratuitos y premium, y seguimiento de recompensas.</p>
+          <div class="chips"><span class="chip">jsonUI</span><span class="chip">battle pass</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a></div>
+        </div>
+      </article>
+
+      <article class="card px reveal" data-cat="addon">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#1d5229,#0f2c15)">
+            <svg viewBox="0 0 16 16"><rect x="6" y="1" width="4" height="4" fill="#2ecc71"/><rect x="4" y="5" width="8" height="7" fill="#2ecc71"/><rect x="6" y="2" width="1" height="1" fill="#17171c"/><rect x="9" y="2" width="1" height="1" fill="#17171c"/><rect x="4" y="12" width="2" height="3" fill="#27ae60"/><rect x="10" y="12" width="2" height="3" fill="#27ae60"/></svg>
+          </div>
+          <span class="badge addon">ADDON</span>
+        </div>
+        <div class="card-body">
+          <h3>Mobs Custom</h3>
+          <p>Pack de criaturas nuevas con modelos propios en Blockbench, IA con behaviors y animaciones Molang.</p>
+          <div class="chips"><span class="chip">entidades</span><span class="chip">molang</span><span class="chip">blockbench</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a> <a href="#">⬇ descargar</a></div>
+        </div>
+      </article>
+
+      <article class="card px reveal" data-cat="addon">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#52171d,#2c0c0f)">
+            <svg viewBox="0 0 16 16"><path d="M12 1 L15 4 L6 13 L4 15 L1 12 L3 10 Z" fill="#4aa4ff"/><rect x="2" y="11" width="3" height="3" fill="#8b5a2b"/><path d="M12 1 L15 4 L13 6 L10 3 Z" fill="#77c0ff"/></svg>
+          </div>
+          <span class="badge addon">ADDON</span>
+        </div>
+        <div class="card-body">
+          <h3>Armas & Herramientas</h3>
+          <p>Espadas, picos y armaduras con stats propios, crafteos personalizados y efectos especiales al golpear.</p>
+          <div class="chips"><span class="chip">ítems</span><span class="chip">recetas</span><span class="chip">script api</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a></div>
+        </div>
+      </article>
+
+      <article class="card px reveal" data-cat="addon">
+        <div class="card-media">
+          <div class="thumb" style="background:linear-gradient(135deg,#173b52,#0c202c)">
+            <svg viewBox="0 0 16 16"><rect x="2" y="9" width="12" height="6" fill="#8b5a2b"/><rect x="2" y="9" width="12" height="2" fill="#a0522d"/><rect x="7" y="10" width="2" height="2" fill="#ffd700"/><path d="M8 1 L10 5 L8 4 L6 5 Z" fill="#7fcc19"/><rect x="7" y="4" width="2" height="4" fill="#7fcc19"/></svg>
+          </div>
+          <span class="badge addon">ADDON</span>
+        </div>
+        <div class="card-body">
+          <h3>Sistema de Crates</h3>
+          <p>Cajas de recompensas con animación de apertura, rarezas configurables y llaves como ítem custom.</p>
+          <div class="chips"><span class="chip">script api</span><span class="chip">recompensas</span></div>
+          <div class="card-links"><a href="#">▶ ver video</a></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CONTACTO ================= -->
+<section id="contact">
+  <div class="wrap">
+    <div class="sec-head reveal"><h2>Contacto</h2><div class="xp-line"></div></div>
+    <p class="reveal" style="color:var(--muted);margin-bottom:28px;max-width:60ch">¿Necesitás una UI custom o un addon para tu servidor o mapa? Escribime por cualquiera de estos canales.</p>
+    <div class="contact-grid">
+      <!-- EDITAR: tus links reales -->
+      <a class="contact-btn px reveal" href="https://discord.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16"><path d="M3 3 C5 2 11 2 13 3 L15 11 C13 13 11 13 11 13 L10.5 12 C12 11.5 12.5 11 12.5 11 C10 12.5 6 12.5 3.5 11 C3.5 11 4 11.5 5.5 12 L5 13 C5 13 3 13 1 11 Z" fill="#5865f2"/><circle cx="6" cy="8" r="1.3" fill="#17171c"/><circle cx="10" cy="8" r="1.3" fill="#17171c"/></svg>
+        <div><div class="cb-name">Discord</div><div class="cb-user">TuUsuario#0000</div></div>
+      </a>
+      <a class="contact-btn px reveal" href="https://youtube.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" rx="0" fill="#ff0000"/><path d="M6.5 6 L10.5 8 L6.5 10 Z" fill="#fff"/></svg>
+        <div><div class="cb-name">YouTube</div><div class="cb-user">@TuCanal</div></div>
+      </a>
+      <a class="contact-btn px reveal" href="https://github.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#f2f2f2"/><path d="M8 2 C4.7 2 2 4.7 2 8 C2 10.7 3.7 13 6.2 13.8 C6.5 13.9 6.6 13.7 6.6 13.5 L6.6 12.3 C4.9 12.7 4.5 11.5 4.5 11.5 C4.2 10.8 3.8 10.6 3.8 10.6 C3.2 10.2 3.8 10.2 3.8 10.2 C4.4 10.2 4.7 10.8 4.7 10.8 C5.3 11.8 6.2 11.5 6.6 11.3 C6.6 10.9 6.8 10.6 7 10.4 C5.6 10.3 4.2 9.7 4.2 7.4 C4.2 6.7 4.4 6.2 4.8 5.8 C4.7 5.6 4.5 5 4.9 4.1 C4.9 4.1 5.4 3.9 6.6 4.7 C7.1 4.6 7.6 4.5 8 4.5 C8.4 4.5 8.9 4.6 9.4 4.7 C10.6 3.9 11.1 4.1 11.1 4.1 C11.5 5 11.3 5.6 11.2 5.8 C11.6 6.2 11.8 6.7 11.8 7.4 C11.8 9.7 10.4 10.2 9 10.4 C9.2 10.6 9.4 11 9.4 11.6 L9.4 13.5 C9.4 13.7 9.5 13.9 9.8 13.8 C12.3 13 14 10.7 14 8 C14 4.7 11.3 2 8 2 Z" fill="#17171c"/></svg>
+        <div><div class="cb-name">GitHub</div><div class="cb-user">/TuUsuario</div></div>
+      </a>
+      <a class="contact-btn px reveal" href="mailto:tu@email.com">
+        <svg viewBox="0 0 16 16"><rect x="1" y="3" width="14" height="10" fill="#ffb600"/><path d="M1 3 L8 9 L15 3" stroke="#17171c" stroke-width="1.5" fill="none"/></svg>
+        <div><div class="cb-name">Email</div><div class="cb-user">tu@email.com</div></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© 2026 TU NOMBRE — hecho con <span class="heart">♥</span> y muchos "modifications" en JSON UI<br>No afiliado con Mojang ni Microsoft.</div>
+</footer>
+
+<script>
+// ---------- pantalla de carga ----------
+const tips = ["Compilando ui_defs.json…","Cargando resource pack…","Generando texturas…","Casi listo…"];
+let p = 0, ti = 0;
+const fill = document.getElementById('loadfill');
+const tipEl = document.getElementById('loadtip');
+const loadInt = setInterval(() => {
+  p = Math.min(100, p + 12 + Math.random() * 18);
+  fill.style.width = p + '%';
+  tipEl.textContent = tips[Math.min(ti++, tips.length - 1)];
+  if (p >= 100) {
+    clearInterval(loadInt);
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('done');
+      setTimeout(showAchievement, 700);
+    }, 250);
+  }
+}, 260);
+
+// ---------- logro ----------
+function showAchievement(){
+  const a = document.getElementById('achv');
+  a.classList.add('show');
+  setTimeout(() => a.classList.remove('show'), 4200);
+}
+
+// ---------- sonido de click (WebAudio, sin archivos) ----------
+let audioCtx;
+function click(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'square'; o.frequency.value = 620;
+    g.gain.setValueAtTime(.06, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .08);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + .08);
+  }catch(e){}
+}
+document.querySelectorAll('.mc-btn,.tab,.nav-links a,.contact-btn').forEach(el => el.addEventListener('click', click));
+
+// ---------- tipeo del JSON del hero ----------
+const jsonLines = [
+  ['{',''],
+  ['  "namespace"', '"portfolio"'],
+  ['  "creador"', '"TU NOMBRE"'],          // EDITAR
+  ['  "especialidad"', '["json_ui", "addons"]'],
+  ['  "plataforma"', '"minecraft_bedrock"'],
+  ['  "estado"', '"aceptando encargos"'],   // EDITAR
+  ['  "$pixel_perfect"', 'true'],
+  ['}','']
+];
+const jc = document.getElementById('jsoncode');
+let li = 0;
+function typeLine(){
+  if (li >= jsonLines.length){ jc.innerHTML += '<span class="caret"></span>'; return; }
+  const [k, v] = jsonLines[li];
+  let html;
+  if (!v) html = k;
+  else {
+    const val = v.startsWith('"') ? '<span class="s">' + v + '</span>'
+      : (v === 'true' ? '<span class="n">true</span>' : '<span class="s">' + v + '</span>');
+    html = '<span class="k">' + k + '</span>: ' + val + (li < jsonLines.length - 2 ? ',' : '');
+  }
+  jc.innerHTML += html + '\n';
+  li++;
+  setTimeout(typeLine, 190);
+}
+setTimeout(typeLine, 1600);
+
+// ---------- filtro de proyectos ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const f = tab.dataset.filter;
+    document.querySelectorAll('.card').forEach(c => {
+      c.style.display = (f === 'all' || c.dataset.cat === f) ? '' : 'none';
+    });
+  });
+});
+
+// ---------- reveal on scroll ----------
+const io = new IntersectionObserver(es => {
+  es.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+}, {threshold:.12});
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
